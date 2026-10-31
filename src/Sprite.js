@@ -1,3 +1,5 @@
+import { Vector2 } from "./Vector2";
+
 export class Sprite {
     constructor({
         resource,
@@ -9,13 +11,13 @@ export class Sprite {
         position,
     }) {
         this.resource = resource;
-        this.frameSize = frameSize;
+        this.frameSize = frameSize ?? new Vector2(16,16);
         this.hFrames = hFrames ?? 1;
         this.vFrames = vFrames ?? 1;
         this.frame = frame ?? 0;
         this.frameMap = new Map();
         this.scale = scale ?? 1;
-        this.position = position;
+        this.position = position ?? new Vector2(0, 0);
         this.buildFrameMap();
     }
 
@@ -26,10 +28,40 @@ export class Sprite {
                 console.log("frame", h, v)
                 this.frameMap.set(
                     frameCount,
-                    {x: 0, y: 0}
+                    new Vector2(this.frameSize.x * h,this.frameSize.y * v )
                 )
                 frameCount++;
             }
         }
+    }
+
+    drawImage(ctx, x, y) {
+        if (!this.resource.isLoaded) {
+            return;
+        }
+
+        // finding the correct sprite sheet fram to use
+        let frameCoordX = 0;
+        let frameCoordY = 0;
+        const frame = this.frameMap.get(this.frame);
+        if (frame) {
+            frameCoordX = frame.x;
+            frameCoordY = frame.y;
+        }
+
+        const frameSizeX = this.frameSize.x;
+        const frameSizeY = this.frameSize.y;
+
+        ctx.drawImage(
+            this.resource.image,
+            frameCoordX,
+            frameCoordY,
+            frameSizeX,
+            frameSizeY,
+            x,
+            y,
+            frameSizeX * this.scale,
+            frameSizeY * this.scale,
+        );
     }
 }
