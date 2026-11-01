@@ -2,10 +2,13 @@ import { resources } from './Resource';
 import { Sprite } from './Sprite';
 import './style.css'
 import { Vector2 } from './Vector2';
+import { GameLoop } from "./GameLoop.js";
+import { Input, DOWN, UP, LEFT, RIGHT } from "./Input.js"
 
 const canvas = document.querySelector("#game-canvas");
 const ctx = canvas.getContext("2d");
-
+const idleFrames = { DOWN: 1, UP: 7, LEFT: 10, RIGHT: 4};
+let facing = DOWN;
 const skySprite = new Sprite({
     resource: resources.images.sky,
     frameSize: new Vector2(320, 180)
@@ -21,7 +24,7 @@ const hero = new Sprite({
   frameSize: new Vector2(32,32),
   hFrames: 3,
   vFrames: 8,
-  frame: 4
+  frame: 1
 })  
 
 const shadow = new Sprite({
@@ -30,6 +33,39 @@ const shadow = new Sprite({
 })
 
 const heroPos = new Vector2(16 * 5, 16 * 5);
+const input = new Input();
+
+
+
+
+const update = () => {
+  if (input.direction === DOWN) {
+    heroPos.y += 1;
+    hero.frame = 0; 
+    facing = DOWN;
+    
+  }
+  if (input.direction === UP) {
+    heroPos.y -= 1;
+    hero.frame = 6;
+    facing = UP;
+  }
+  if (input.direction === LEFT) {
+    heroPos.x -= 1;
+    hero.frame = 9;
+    facing = LEFT;
+  }
+  if (input.direction === RIGHT) {
+    heroPos.x += 1;
+    hero.frame = 3;
+    facing = RIGHT;
+  }
+
+  if (!input.direction) {
+    hero.frame = idleFrames[facing];
+  }
+};
+
 
 const draw = () => {
   skySprite.drawImage(ctx, 0, 0);
@@ -43,7 +79,5 @@ const draw = () => {
   hero.drawImage(ctx, heroPos.x, heroPos.y);
 }
 
-setInterval(() => {
-  hero.frame += 1;
-  draw()
-}, 300)
+const gameLoop = new GameLoop(update, draw); 
+gameLoop.start();
