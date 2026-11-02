@@ -6,6 +6,8 @@ import { GameLoop } from "./GameLoop.js";
 import { Input, DOWN, UP, LEFT, RIGHT } from "./Input.js"
 import { gridCells } from './helpers/grid.js';
 import { moveTowards } from './helpers/moveTowards.js';
+import { drawLevel, loadLevel, walls, TILE } from './level.js';
+
 
 const canvas = document.querySelector("#game-canvas");
 const ctx = canvas.getContext("2d");
@@ -76,8 +78,15 @@ const update = () => {
 
 
 const draw = () => {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   skySprite.drawImage(ctx, 0, 0);
-  groundSprite.drawImage(ctx, 0, 0);
+  drawLevel(ctx)
+
+  ctx.fillStyle = "rgba(255,0,0,0.35)";
+for (const key of walls) {
+  const [x, y] = key.split(",").map(Number);
+  ctx.fillRect(x, y, TILE, TILE);
+}
   
   const heroOffset = new Vector2(-8, -21);
   const heroPosX = hero.position.x+heroOffset.x;
@@ -88,4 +97,4 @@ const draw = () => {
 }
 
 const gameLoop = new GameLoop(update, draw); 
-gameLoop.start();
+loadLevel().then(() => gameLoop.start());
