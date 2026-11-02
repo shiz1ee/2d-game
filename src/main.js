@@ -4,6 +4,8 @@ import './style.css'
 import { Vector2 } from './Vector2';
 import { GameLoop } from "./GameLoop.js";
 import { Input, DOWN, UP, LEFT, RIGHT } from "./Input.js"
+import { gridCells } from './helpers/grid.js';
+import { moveTowards } from './helpers/moveTowards.js';
 
 const canvas = document.querySelector("#game-canvas");
 const ctx = canvas.getContext("2d");
@@ -24,8 +26,13 @@ const hero = new Sprite({
   frameSize: new Vector2(32,32),
   hFrames: 3,
   vFrames: 8,
-  frame: 1
-})  
+  frame: 1,
+  
+})
+
+const heroDestinationPosition = new Vector2(
+  gridCells(10), gridCells(5)
+)
 
 const shadow = new Sprite({
   resource: resources.images.shadow,
@@ -39,6 +46,7 @@ const input = new Input();
 
 
 const update = () => {
+
   if (input.direction === DOWN) {
     heroPos.y += 1;
     hero.frame = 0; 
@@ -72,8 +80,8 @@ const draw = () => {
   groundSprite.drawImage(ctx, 0, 0);
   
   const heroOffset = new Vector2(-8, -21);
-  const heroPosX = heroPos.x+heroOffset.x;
-  const heroPosY = heroPos.y+heroOffset.y;
+  const heroPosX = hero.position.x+heroOffset.x;
+  const heroPosY = hero.position.y+heroOffset.y;
 
   shadow.drawImage(ctx, heroPos.x, heroPos.y);
   hero.drawImage(ctx, heroPos.x, heroPos.y);
