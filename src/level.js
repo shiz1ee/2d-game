@@ -1,6 +1,18 @@
 export const TILE = 32;
 const TILESET_COLS = 19;
 
+const REMOVED_WALLS = [
+    [22, 8],
+    [22, 9],
+    [22, 10],
+    [22, 11],
+    [22, 12],
+    [22, 13],
+    [20, 6],
+    [21, 6],
+    [19, 6],
+]
+
 export const walls = new Set();
 let mapData;
 let firstgid = 1;
@@ -28,9 +40,11 @@ export async function loadLevel(
             if (git === 0) return;
             const col = i % layer.width;
             const row = Math.floor(i / layer.width);
-            walls.add(`${col * TILE}, ${row * TILE}`);
+            walls.add(`${col * TILE},${row * TILE}`);
         });
     }
+    REMOVED_WALLS.forEach(([c, r]) => walls.delete(`${c * TILE},${r * TILE}`));
+       console.log("sample keys:", [...walls].slice(0, 3), "removed count:", REMOVED_WALLS.length);
 }
 
 export function drawLevel(ctx) {
