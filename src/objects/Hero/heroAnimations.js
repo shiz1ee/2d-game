@@ -4,7 +4,7 @@ const makeWalkingFrames = (rootFrame=0) => {
     frames: [
             {
                 time: 0,
-                frame: returnFrame+1
+                frame: rootFrame+1
             },
             {
                 time: 100,

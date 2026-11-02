@@ -38,7 +38,7 @@ export class Sprite {
     }
 
     step(delta) {
-        if (this.animations) {return;}
+        if (!this.animations) {return;}
         this.animations.step(delta);
         this.frame = this.animations.frame;
     }

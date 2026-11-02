@@ -5,9 +5,10 @@ import { Vector2 } from './Vector2';
 import { GameLoop } from "./GameLoop.js";
 import { Input, DOWN, UP, LEFT, RIGHT } from "./Input.js"
 import { gridCells } from './helpers/grid.js';
-import { moveTowards } from './helpers/moveTowards.js';
 import { drawLevel, loadLevel, walls, TILE } from './level.js';
-
+import { Animations } from './Animations.js';
+import { FrameIndexPattern } from './FrameIndexPattern.js';
+import { WALK_DOWN, WALK_UP, WALK_LEFT, WALK_RIGHT, STAND_DOWN, STAND_UP, STAND_LEFT, STAND_RIGHT } from './objects/Hero/heroAnimations.js';
 
 const canvas = document.querySelector("#game-canvas");
 const ctx = canvas.getContext("2d");
@@ -40,12 +41,25 @@ const hero = new Sprite({
   hFrames: 3,
   vFrames: 8,
   frame: 1,
+  position: new Vector2(gridCells(6), gridCells(5)),
+  animations: new Animations({
+    walkDown: new FrameIndexPattern(WALK_DOWN),
+    walkUp: new FrameIndexPattern(WALK_UP),
+    walkLeft: new FrameIndexPattern(WALK_LEFT),
+    walkRight: new FrameIndexPattern(WALK_RIGHT),
+    standDown: new FrameIndexPattern(STAND_DOWN),
+    standUp: new FrameIndexPattern(STAND_UP),
+    standLeft: new FrameIndexPattern(STAND_LEFT),
+    standRight: new FrameIndexPattern(STAND_RIGHT),
+  })
   
 })
 
 const heroDestinationPosition = new Vector2(
   gridCells(10), gridCells(5)
 )
+
+let heroFacing = DOWN; 
 
 const shadow = new Sprite({
   resource: resources.images.shadow,
@@ -81,33 +95,36 @@ const move = (dx, dy) => {
 }
 
 
-const update = () => {
+const standAnim = {
+  [DOWN]: "standDown", [UP]: "standUp", [LEFT]: "standLeft", [RIGHT]: "standRight",
+};
 
+const update = (delta) => {
   if (input.direction === DOWN) {
     move(0, SPEED);
-    hero.frame = 0; 
+    hero.animations.play("walkDown");
     facing = DOWN;
-    
   }
   if (input.direction === UP) {
     move(0, -SPEED);
-    hero.frame = 6;
+    hero.animations.play("walkUp");
     facing = UP;
   }
   if (input.direction === LEFT) {
     move(-SPEED, 0);
-    hero.frame = 9;
+    hero.animations.play("walkLeft");
     facing = LEFT;
   }
   if (input.direction === RIGHT) {
     move(SPEED, 0);
-    hero.frame = 3;
+    hero.animations.play("walkRight");
     facing = RIGHT;
   }
-
   if (!input.direction) {
-    hero.frame = idleFrames[facing];
+    hero.animations.play(standAnim[facing]);
   }
+
+  hero.step(delta);
 };
 
 
