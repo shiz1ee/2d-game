@@ -9,6 +9,7 @@ import { drawLevel, loadLevel, walls, TILE } from './level.js';
 import { Animations } from './Animations.js';
 import { FrameIndexPattern } from './FrameIndexPattern.js';
 import { WALK_DOWN, WALK_UP, WALK_LEFT, WALK_RIGHT, STAND_DOWN, STAND_UP, STAND_LEFT, STAND_RIGHT } from './objects/Hero/heroAnimations.js';
+import { GameObject } from './GameObject.js';
 
 const canvas = document.querySelector("#game-canvas");
 const ctx = canvas.getContext("2d");
@@ -26,14 +27,15 @@ let facing = DOWN;
 
 
 const groundSprite = new Sprite({
-    resource: resources.images.ground,
-    frameSize: new Vector2(320, 180)
-  })
+  resource: resources.images.ground,
+  frameSize: new Vector2(320, 180),
+})
 
 const skySprite = new Sprite({
   resource: resources.images.sky,
   frameSize: new Vector2(320, 180)
 });
+
 
 const hero = new Sprite({
   resource: resources.images.hero,
@@ -155,12 +157,8 @@ const draw = () => {
   ctx.strokeStyle = "lime";
   ctx.strokeRect(heroPos.x + HITBOX.x, heroPos.y + HITBOX.y, HITBOX.w, HITBOX.h);
 
-  ctx.strokeStyle = "red";
-for (const key of walls) {
-  const [x, y] = key.split(",").map(Number);
-  ctx.strokeRect(x, y, TILE, TILE);
 }
-}
+
 
 const gameLoop = new GameLoop(update, draw); 
 loadLevel().then(() => gameLoop.start());
