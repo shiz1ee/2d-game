@@ -9,7 +9,8 @@ import { drawLevel, loadLevel, walls, TILE } from './level.js';
 import { Animations } from './Animations.js';
 import { FrameIndexPattern } from './FrameIndexPattern.js';
 import { WALK_DOWN, WALK_UP, WALK_LEFT, WALK_RIGHT, STAND_DOWN, STAND_UP, STAND_LEFT, STAND_RIGHT } from './objects/Hero/heroAnimations.js';
-import { GameObject } from './GameObject.js';
+import { Camera } from './Camera.js';
+
 
 const canvas = document.querySelector("#game-canvas");
 const ctx = canvas.getContext("2d");
@@ -101,6 +102,9 @@ const standAnim = {
   [DOWN]: "standDown", [UP]: "standUp", [LEFT]: "standLeft", [RIGHT]: "standRight",
 };
 
+
+const camera = new Camera(canvas.width, canvas.height, 0);
+
 const update = (delta) => {
   if (input.direction === DOWN) {
     move(0, SPEED);
@@ -127,25 +131,30 @@ const update = (delta) => {
   }
 
   hero.step(delta);
+  
+  camera.follow(new Vector2(
+    hero.position.x + HITBOX.x + HITBOX.w / 2,
+    hero.position.y + HITBOX.y + HITBOX.h / 2
+  ));
 };
 
 
 const draw = () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   
+
+  //Sky fixed to the screen
   const skyScale = canvas.height / 180;
   ctx.save();
   ctx.scale(skyScale, skyScale);
   skySprite.drawImage(ctx, 0, 0);
   ctx.restore();
 
+  // everything in the world goes inside the camera block
+  ctx.save();
+  ctx.translate(Math.round(camera.position.x), Math.round(camera.position.y));
+
   drawLevel(ctx)
-
-
-  
-  const heroOffset = new Vector2(-8, -21);
-  const heroPosX = hero.position.x+heroOffset.x;
-  const heroPosY = hero.position.y+heroOffset.y;
 
   ctx.save();
   ctx.translate(heroPos.x, heroPos.y);
@@ -156,8 +165,8 @@ const draw = () => {
 
   ctx.strokeStyle = "lime";
   ctx.strokeRect(heroPos.x + HITBOX.x, heroPos.y + HITBOX.y, HITBOX.w, HITBOX.h);
-
-}
+  ctx.restore();
+};
 
 
 const gameLoop = new GameLoop(update, draw); 
