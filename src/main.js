@@ -10,6 +10,9 @@ import { Animations } from './Animations.js';
 import { FrameIndexPattern } from './FrameIndexPattern.js';
 import { WALK_DOWN, WALK_UP, WALK_LEFT, WALK_RIGHT, STAND_DOWN, STAND_UP, STAND_LEFT, STAND_RIGHT } from './objects/Hero/heroAnimations.js';
 import { Camera } from './Camera.js';
+import { GameObject } from './GameObject.js';
+import { events } from './Events.js';
+
 
 
 const canvas = document.querySelector("#game-canvas");
@@ -17,8 +20,8 @@ const ctx = canvas.getContext("2d");
 // for removing the extra collision boxes
 canvas.addEventListener("click", (e) => {
   const r = canvas.getBoundingClientRect();
-  const col = Math.floor(((e.clientX - r.left) * (canvas.width / r.width)) / TILE);
-  const row = Math.floor(((e.clientY - r.top) * (canvas.height / r.height)) / TILE);
+  const col = Math.floor((((e.clientX - r.left) * (canvas.width / r.width)) - camera.position.x) / TILE);
+  const row = Math.floor((((e.clientY - r.top) * (canvas.height / r.height)) - camera.position.y) / TILE);
   console.log(`[${col}, ${row}],`);
 });
 
@@ -82,7 +85,7 @@ const isBlocked = (px, py) => {
   const right = left + HITBOX.w -1;
   const bottom = top + HITBOX.h -1;
 
-  if (left < 0 || top < 0 || right >= canvas.width || bottom >= canvas.height) return true;
+  if (left < 0 || top < 0 || right >= WORLD_W || bottom >= WORLD_H) return true;
 
   for (let ty = Math.floor(top / TILE); ty <= Math.floor(bottom / TILE); ty++) {
     for (let tx = Math.floor(left / TILE); tx <= Math.floor(right / TILE); tx++) {
@@ -103,9 +106,29 @@ const standAnim = {
 };
 
 
-const camera = new Camera(canvas.width, canvas.height, 0);
+const WORLD_W = 30 * TILE;
+const WORLD_H = 20 * TILE;
+
+let lastHeroX , lastHeroY;
+
+const mainScene = new GameObject({});
+const camera = new Camera(canvas.width, canvas.height);
+mainScene.addChild(camera);
+
+const resize = () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  camera.canvasWidth = canvas.width;
+  camera.canvasHeight = canvas.height;
+  ctx.imageSmoothingEnabled = false;
+  lastHeroX = undefined;
+};
+window.addEventListener("resize", resize)
+resize();
 
 const update = (delta) => {
+  mainScene.stepEntry(delta, mainScene);
+
   if (input.direction === DOWN) {
     move(0, SPEED);
     hero.animations.play("walkDown");
@@ -132,10 +155,15 @@ const update = (delta) => {
 
   hero.step(delta);
   
-  camera.follow(new Vector2(
-    hero.position.x + HITBOX.x + HITBOX.w / 2,
-    hero.position.y + HITBOX.y + HITBOX.h / 2
-  ));
+  //homing but as a camera
+  if (lastHeroX !== heroPos.x || lastHeroY !== heroPos.y) {
+    lastHeroX = heroPos.x;
+    lastHeroY = heroPos.y;
+    events.emit("HERO_POSITION", new Vector2(
+      heroPos.x + HITBOX.x + HITBOX.w / 2,
+      heroPos.y + HITBOX.y + HITBOX.h / 2
+    ));
+  }
 };
 
 
@@ -144,8 +172,12 @@ const draw = () => {
   
 
   //Sky fixed to the screen
-  const skyScale = canvas.height / 180;
+  const skyScale = Math.max(canvas.width / 320, canvas.height /180);
   ctx.save();
+  ctx.translate(
+    (canvas.width - 320 * skyScale) / 2,
+    (canvas.height - 180 * skyScale) /2
+  );
   ctx.scale(skyScale, skyScale);
   skySprite.drawImage(ctx, 0, 0);
   ctx.restore();
