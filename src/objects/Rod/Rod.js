@@ -24,6 +24,16 @@ export class Rod extends GameObject {
     }
 
     onCollideWithHero() {
+        if (this.collected) return;
+        this.collected = true;
+
+        events.unsubscribe(this);
         this.destroy();
+
+        events.emit("HERO_PICKS_UP_ITEM", {
+            type: "ROD",
+            image: resources.images.rod,
+            position: this.position,
+        });
     }
 }

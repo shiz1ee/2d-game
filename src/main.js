@@ -8,7 +8,7 @@ import { gridCells } from './helpers/grid.js';
 import { drawLevel, loadLevel, walls, TILE } from './level.js';
 import { Animations } from './Animations.js';
 import { FrameIndexPattern } from './FrameIndexPattern.js';
-import { WALK_DOWN, WALK_UP, WALK_LEFT, WALK_RIGHT, STAND_DOWN, STAND_UP, STAND_LEFT, STAND_RIGHT } from './objects/Hero/heroAnimations.js';
+import { WALK_DOWN, WALK_UP, WALK_LEFT, WALK_RIGHT, STAND_DOWN, STAND_UP, STAND_LEFT, STAND_RIGHT, PICK_UP_DOWN } from './objects/Hero/heroAnimations.js';
 import { Camera } from './Camera.js';
 import { GameObject } from './GameObject.js';
 import { Rod } from './objects/Rod/Rod.js';
@@ -28,6 +28,11 @@ canvas.addEventListener("click", (e) => {
 ctx.imageSmoothingEnabled = false;
 const idleFrames = { DOWN: 1, UP: 7, LEFT: 10, RIGHT: 4};
 let facing = DOWN;
+
+let pickUpTime = 0;
+events.on("HERO_PICKS_UP_ITEM", null, () => {
+  pickUpTime = 500; //ms
+});
 
 
 const groundSprite = new Sprite({
@@ -57,6 +62,7 @@ const hero = new Sprite({
     standUp: new FrameIndexPattern(STAND_UP),
     standLeft: new FrameIndexPattern(STAND_LEFT),
     standRight: new FrameIndexPattern(STAND_RIGHT),
+    pickUpDown: new FrameIndexPattern(PICK_UP_DOWN),
   })
   
 })
@@ -141,29 +147,35 @@ resize();
 
 const update = (delta) => {
 
-  if (input.direction === DOWN) {
-    move(0, SPEED);
-    hero.animations.play("walkDown");
-    facing = DOWN;
-  }
-  if (input.direction === UP) {
-    move(0, -SPEED);
-    hero.animations.play("walkUp");
-    facing = UP;
-  }
-  if (input.direction === LEFT) {
-    move(-SPEED, 0);
-    hero.animations.play("walkLeft");
-    facing = LEFT;
-  }
-  if (input.direction === RIGHT) {
-    move(SPEED, 0);
-    hero.animations.play("walkRight");
-    facing = RIGHT;
-  }
-  if (!input.direction) {
-    hero.animations.play(standAnim[facing]);
-  }
+  if (pickUpTime > 0) {
+    pickUpTime -= delta;
+    hero.animations.play("pickUpDown");
+  } else {
+
+      if (input.direction === DOWN) {
+        move(0, SPEED);
+        hero.animations.play("walkDown");
+        facing = DOWN;
+      }
+      if (input.direction === UP) {
+        move(0, -SPEED);
+        hero.animations.play("walkUp");
+        facing = UP;
+      }
+      if (input.direction === LEFT) {
+        move(-SPEED, 0);
+        hero.animations.play("walkLeft");
+        facing = LEFT;
+      }
+      if (input.direction === RIGHT) {
+        move(SPEED, 0);
+        hero.animations.play("walkRight");
+        facing = RIGHT;
+      }
+      if (!input.direction) {
+        hero.animations.play(standAnim[facing]);
+      }
+    }
 
   hero.stepEntry(delta, null);
   campfire.frame = Math.floor(performance.now() / 100) % 4;
@@ -215,6 +227,9 @@ const draw = () => {
   ctx.scale(2, 2);
   shadow.drawImage(ctx, 0, 0);
   hero.drawImage(ctx, 0, 0);
+  if (pickUpTime > 0 && resources.images.rod.isLoaded) {
+    ctx.drawImage(resources.images.rod.image, 8, 2);
+  }
   ctx.restore();
 
   ctx.strokeStyle = "lime";
