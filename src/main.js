@@ -30,9 +30,11 @@ ctx.imageSmoothingEnabled = false;
 const idleFrames = { DOWN: 1, UP: 7, LEFT: 10, RIGHT: 4};
 let facing = DOWN;
 
-let pickUpTime = 0;
-events.on("HERO_PICKS_UP_ITEM", null, () => {
-  pickUpTime = 500; //ms
+let pickupTime = 0;
+const inventory = [];
+events.on("HERO_PICKS_UP_ITEM", null, (data) => {
+  pickupTime = 500; // ms
+  inventory.push(data.image);
 });
 
 
@@ -92,7 +94,6 @@ const input = new Input();
 
 const rod = new Rod(TILE * 20.25, TILE * 6); 
 
-const inventory = new Inventory();
 
 const SPEED = 1;
 // feet box relative to heroPos, in on-screen pixls
@@ -149,8 +150,8 @@ resize();
 
 const update = (delta) => {
 
-  if (pickUpTime > 0) {
-    pickUpTime -= delta;
+  if (pickupTime > 0) {
+    pickupTime -= delta;
     hero.animations.play("pickUpDown");
   } else {
 
@@ -229,16 +230,29 @@ const draw = () => {
   ctx.scale(2, 2);
   shadow.drawImage(ctx, 0, 0);
   hero.drawImage(ctx, 0, 0);
-  if (pickUpTime > 0 && resources.images.rod.isLoaded) {
-    ctx.drawImage(resources.images.rod.image, 8, 2);
+  if (pickupTime > 0 && resources.images.rod.isLoaded) {
+    const S = 24;
+    ctx.drawImage(resources.images.rod.image, 16 -S /2, 18 -S, S, S);
   }
   ctx.restore();
 
   ctx.strokeStyle = "lime";
   ctx.strokeRect(heroPos.x + HITBOX.x, heroPos.y + HITBOX.y, HITBOX.w, HITBOX.h);
   ctx.restore();
-
-  inventory.draw(ctx, 0, 0)
+  ctx.save();
+  
+  const SLOT = 48, PAD = 12, GAP = 8;
+  inventory.forEach((img, i) => {
+    const x = PAD + i * (SLOT + GAP);
+    const y = PAD;
+    ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+    ctx.fillRect(x, y, SLOT, SLOT);
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, SLOT, SLOT);
+    if (img.isLoaded) ctx.drawImage(img.image, x + 8,y + 8, SLOT - 16, SLOT - 16);
+  })
+  ctx.restore();
 };
 
 
