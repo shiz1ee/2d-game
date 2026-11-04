@@ -1,4 +1,5 @@
 import { Vector2 } from "./Vector2";
+import { events } from "./Events.js";
 
 export class GameObject {
     constructor({ position}) {
@@ -39,7 +40,7 @@ export class GameObject {
         this.children.forEach(child => {
             child.destroy();
         });
-        this.parent.removeChild(this) 
+        this.parent?.removeChild(this) 
     }
 
     addChild(gameObject) {

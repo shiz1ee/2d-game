@@ -74,7 +74,9 @@ const shadow = new Sprite({
 
 const heroPos = new Vector2(TILE * 10, TILE * 6);
 const input = new Input();
+
 const rod = new Rod(TILE * 20.25, TILE * 6); 
+
 
 const SPEED = 1;
 // feet box relative to heroPos, in on-screen pixls
@@ -130,7 +132,6 @@ window.addEventListener("resize", resize)
 resize();
 
 const update = (delta) => {
-  mainScene.stepEntry(delta, mainScene);
 
   if (input.direction === DOWN) {
     move(0, SPEED);
@@ -155,9 +156,15 @@ const update = (delta) => {
   if (!input.direction) {
     hero.animations.play(standAnim[facing]);
   }
+
   hero.stepEntry(delta, null);
-  events.emit("HERO_POSITION", new Vector2(heroPos.x + 32, heroPos.y + 50));
-  hero.step(delta);
+
+  events.emit("HERO_BOX", {
+    x: heroPos.x + HITBOX.x, y: heroPos.y + HITBOX.y,
+    w: HITBOX.w, h: HITBOX.h,
+  });
+
+  mainScene.stepEntry(delta, mainScene);
   
   //homing but as a camera
   if (lastHeroX !== heroPos.x || lastHeroY !== heroPos.y) {
