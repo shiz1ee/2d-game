@@ -22,4 +22,8 @@ export class Rod extends GameObject {
         
     }
 
+    onCollideWithHero() {
+        this.destroy();
+    }
+
 }
