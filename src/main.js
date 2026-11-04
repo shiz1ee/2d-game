@@ -13,6 +13,7 @@ import { Camera } from './Camera.js';
 import { GameObject } from './GameObject.js';
 import { Rod } from './objects/Rod/Rod.js';
 import { events } from './Events.js';
+import { Inventory } from './objects/Inventory/Inventory.js';
 
 
 const canvas = document.querySelector("#game-canvas");
@@ -91,6 +92,7 @@ const input = new Input();
 
 const rod = new Rod(TILE * 20.25, TILE * 6); 
 
+const inventory = new Inventory();
 
 const SPEED = 1;
 // feet box relative to heroPos, in on-screen pixls
@@ -235,6 +237,8 @@ const draw = () => {
   ctx.strokeStyle = "lime";
   ctx.strokeRect(heroPos.x + HITBOX.x, heroPos.y + HITBOX.y, HITBOX.w, HITBOX.h);
   ctx.restore();
+
+  inventory.draw(ctx, 0, 0)
 };
 
 
