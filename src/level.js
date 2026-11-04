@@ -51,11 +51,16 @@ export function drawLevel(ctx) {
     for (const layer of mapData.layers) {
         if (layer.type !== "tilelayer" || !layer.visible) continue;
         layer.data.forEach((gid, i) => {
+            if (gid === 0) return;
+
+            const dx = (i % layer.width) * TILE;
+            const dy = Math.floor(i / layer.width) * TILE;
+
+            if (layer.name === "fence-tree-camp" && dx === 16 * TILE && dy === 11 * TILE) return;
+
             const id = gid - firstgid;
             const sx = (id % TILESET_COLS) * TILE;
             const sy = Math.floor(id / TILESET_COLS) * TILE;
-            const dx = (i % layer.width) * TILE;
-            const dy = Math.floor(i / layer.width) * TILE;
             ctx.drawImage(tilesetImg, sx, sy, TILE, TILE, dx, dy, TILE, TILE);
         });
     }

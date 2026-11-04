@@ -72,6 +72,14 @@ const shadow = new Sprite({
   frameSize: new Vector2(32,32)
 })
 
+const campfire = new Sprite({
+  resource: resources.images.campfire,
+  frameSize: new Vector2(32, 32),
+  hFrames: 4,
+  vFrames: 1,
+  frame: 0,
+});
+
 const heroPos = new Vector2(TILE * 10, TILE * 6);
 const input = new Input();
 
@@ -158,6 +166,7 @@ const update = (delta) => {
   }
 
   hero.stepEntry(delta, null);
+  campfire.frame = Math.floor(performance.now() / 100) % 4;
 
   events.emit("HERO_BOX", {
     x: heroPos.x + HITBOX.x, y: heroPos.y + HITBOX.y,
@@ -198,6 +207,7 @@ const draw = () => {
   ctx.translate(Math.round(camera.position.x), Math.round(camera.position.y));
 
   drawLevel(ctx)
+  campfire.drawImage(ctx, 16 * TILE, 11 * TILE);
   rod.draw(ctx, 0, 0);
 
   ctx.save();
