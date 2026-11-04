@@ -1,6 +1,7 @@
 import { Vector2 } from "./Vector2";
+import { GameObject } from "./GameObject";
 
-export class Sprite {
+export class Sprite extends GameObject {
     constructor({
         resource,
         frameSize,
@@ -11,6 +12,7 @@ export class Sprite {
         position,
         animations,
     }) {
+        super({ position: position ?? new Vector2(0, 0) });
         this.resource = resource;
         this.frameSize = frameSize ?? new Vector2(16,16);
         this.hFrames = hFrames ?? 1;

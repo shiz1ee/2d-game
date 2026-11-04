@@ -11,8 +11,8 @@ import { FrameIndexPattern } from './FrameIndexPattern.js';
 import { WALK_DOWN, WALK_UP, WALK_LEFT, WALK_RIGHT, STAND_DOWN, STAND_UP, STAND_LEFT, STAND_RIGHT } from './objects/Hero/heroAnimations.js';
 import { Camera } from './Camera.js';
 import { GameObject } from './GameObject.js';
+import { Rod } from './objects/Rod/Rod.js';
 import { events } from './Events.js';
-
 
 
 const canvas = document.querySelector("#game-canvas");
@@ -74,6 +74,7 @@ const shadow = new Sprite({
 
 const heroPos = new Vector2(TILE * 10, TILE * 6);
 const input = new Input();
+const rod = new Rod(TILE * 20.25, TILE * 6); 
 
 const SPEED = 1;
 // feet box relative to heroPos, in on-screen pixls
@@ -115,6 +116,8 @@ const mainScene = new GameObject({});
 const camera = new Camera(canvas.width, canvas.height);
 mainScene.addChild(camera);
 
+mainScene.addChild(rod);
+
 const resize = () => {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -152,7 +155,8 @@ const update = (delta) => {
   if (!input.direction) {
     hero.animations.play(standAnim[facing]);
   }
-
+  hero.stepEntry(delta, null);
+  events.emit("HERO_POSITION", new Vector2(heroPos.x + 32, heroPos.y + 50));
   hero.step(delta);
   
   //homing but as a camera
@@ -187,6 +191,7 @@ const draw = () => {
   ctx.translate(Math.round(camera.position.x), Math.round(camera.position.y));
 
   drawLevel(ctx)
+  rod.draw(ctx, 0, 0);
 
   ctx.save();
   ctx.translate(heroPos.x, heroPos.y);

@@ -1,27 +1,17 @@
-const makeWalkingFrames = (rootFrame=0) => {
-    return {
-    duration: 400,
-    frames: [
-            {
-                time: 0,
-                frame: rootFrame+1
-            },
-            {
-                time: 100,
-                frame: rootFrame
-            },
-            {
-                time: 200,
-                frame: rootFrame+1
-            },
-            {
-                time: 300,
-                frame: rootFrame+2
-            },
-        ]
-    }   
 
-}
+const FRAME_TIME = 160; // ms per frame, was 100. higher = slower
+
+const makeWalkingFrames = (rootFrame = 0) => {
+  return {
+    duration: FRAME_TIME * 4,
+    frames: [
+      { time: 0,              frame: rootFrame + 1 },
+      { time: FRAME_TIME,     frame: rootFrame },
+      { time: FRAME_TIME * 2, frame: rootFrame + 1 },
+      { time: FRAME_TIME * 3, frame: rootFrame + 2 },
+    ],
+  };
+};
 const makeStandingFrames = (rootFrame = 0) => {
     return {
         duration: 400,
