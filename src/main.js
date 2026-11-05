@@ -31,6 +31,13 @@ const idleFrames = { DOWN: 1, UP: 7, LEFT: 10, RIGHT: 4};
 let facing = DOWN;
 let doorProgress = 0;
 
+let fade = 0;
+let fadeDir = 0;
+let scene = "village"
+let switching = false;
+const FADE_MS = 400;
+let onBlack = null;
+
 let pickupTime = 0;
 const inventory = [];
 events.on("HERO_PICKS_UP_ITEM", null, (data) => {
@@ -135,8 +142,8 @@ const standAnim = {
 };
 
 
-const WORLD_W = 30 * TILE;
-const WORLD_H = 20 * TILE;
+let WORLD_W = 30 * TILE;
+let WORLD_H = 20 * TILE;
 
 let lastHeroX , lastHeroY;
 
@@ -157,9 +164,62 @@ const resize = () => {
 window.addEventListener("resize", resize)
 resize();
 
+//changing the scene
+const changeScene = async (name) => {
+  if (name === "house") {
+    await loadLevel("/levels/house.json", "/sprites/tiles_and_items.png", [[5, 7]]);
+    WORLD_W = 12 * TILE;
+    WORLD_H = 8 * TILE;
+    camera.worldW = WORLD_W;
+    camera.worldH = WORLD_H;
+    heroPos.x = 144;
+    heroPos.y = 156;
+    facing = UP;
+  } else {
+    await loadLevel();
+    WORLD_W = 30 * TILE;
+    WORLD_H + 20 * TILE;
+    camera.worldW = null;
+    camera.WORLDH = null;
+    heroPos.x = 624;
+    heroPos.y = 156;
+    facing = DOWN;
+    doorProgress = 3;
+  }
+  scene = name;
+  lastHeroX = undefined;
+};
+
 const update = (delta) => {
 
-  if (pickupTime > 0) {
+  if (fadeDir !== 0) {
+    fade += (fadeDir * delta) / FADE_MS;
+    if (fadeDir === 1 && fade >= 1) {
+      fade = 1;
+      fadeDir = -1;
+      if (onBlack) onBlack();
+    } else if (fadeDir === -1 && fade <= 0) {
+      fade = 0;
+      fadeDir = 0;
+    }
+  } 
+
+  if (fadeDir !== 0) {
+    fade += (fadeDir + delta) / FADE_MS;
+    if (fadeDir === 1 && fade >= 1) {
+      fade = 1;
+      if (!switching) {
+        switching = true;
+        Promise.resolve(onBlack && onBlack()).then(() => {
+          switching = false;
+          fadeDir = -1;
+        })
+      }
+    } else if (fadeDir === -1 && fade <= 0) {
+      fade = 0;
+      fadeDir = 0;
+    }
+  } else if (pickupTime > 0) {
     pickupTime -= delta;
     hero.animations.play("pickUpDown");
   } else {
@@ -193,7 +253,7 @@ const update = (delta) => {
   campfire.frame = Math.floor(performance.now() / 100) % 4;
 
   
-  {
+   if ( scene === "village") {
     const fx = heroPos.x + HITBOX.x;
     const fy = heroPos.y + HITBOX.y;
     const nearDoor =
@@ -206,6 +266,28 @@ const update = (delta) => {
     else if (doorProgress > target) doorProgress = Math.max(target, doorProgress - step);
 
     door.frame = Math.round(doorProgress);
+
+    const enterDoor = 
+      doorProgress >= 3 && fadeDir === 0 && input.direction === UP &&
+      fy <= 6 * TILE + 2 &&
+      fx + HITBOX.w / 2 > 20 * TILE && fx + HITBOX.w / 2 < 21 * TILE;
+    if (enterDoor) {
+      fadeDir = 1;
+      onBlack = () => changeScene("house");
+    }
+  }
+
+  if (scene === "house") {
+    const fx = heroPos.x + HITBOX.x;
+    const fy = heroPos.y + HITBOX.y;
+    const exitHouse =
+      fadeDir === 0 && input.direction === DOWN &&
+      fx + HITBOX.w / 2 > 5 * TILE && fx + HITBOX.w / 2 < 6 * TILE &&
+      fy + HITBOX.h >= 7 * TILE + 24;
+    if (exitHouse) {
+      fadeDir = 1;
+      onBlack = () => changeScene("village");
+    }
   }
   
 
@@ -230,6 +312,11 @@ const update = (delta) => {
 
 const draw = () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (scene === "house") {
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
   
 
   //Sky fixed to the screen
@@ -240,7 +327,7 @@ const draw = () => {
     (canvas.height - 180 * skyScale) /2
   );
   ctx.scale(skyScale, skyScale);
-  skySprite.drawImage(ctx, 0, 0);
+  if ( scene === "village") skySprite.drawImage(ctx, 0, 0);
   ctx.restore();
 
   // everything in the world goes inside the camera block
@@ -248,9 +335,12 @@ const draw = () => {
   ctx.translate(Math.round(camera.position.x), Math.round(camera.position.y));
 
   drawLevel(ctx)
-  campfire.drawImage(ctx, 16 * TILE, 11 * TILE);
-  door.drawImage(ctx, 20* TILE, 5 * TILE);
-  rod.draw(ctx, 0, 0);
+
+  if (scene === "village") {
+    campfire.drawImage(ctx, 16 * TILE, 11 * TILE);
+    door.drawImage(ctx, 20* TILE, 5 * TILE);
+    rod.draw(ctx, 0, 0);
+  }
 
   ctx.save();
   ctx.translate(heroPos.x, heroPos.y);
@@ -280,6 +370,11 @@ const draw = () => {
     if (img.isLoaded) ctx.drawImage(img.image, x + 8,y + 8, SLOT - 16, SLOT - 16);
   })
   ctx.restore();
+
+  if (fade > 0) {
+    ctx.fillStyle = `rgba(0, 0, 0, ${fade})`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
 };
 
 
