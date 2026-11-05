@@ -110,6 +110,7 @@ const heroPos = new Vector2(TILE * 10, TILE * 6);
 const input = new Input();
 
 const STONE = { col: 9, row: 4};
+const HOLE = { col: 9, row: 5 };
 const WANDS_NEEDED = 4;
 const PIXEL_FONT = '"Press Start 2P", monospace';
 document.fonts.load('16px "Press Start 2P"');
@@ -420,6 +421,37 @@ const drawDialog = () => {
   ctx.restore();
 };
 
+const drawHole = () => {
+  if (!holeOpen || scene !== "village") return;
+  const cx = HOLE.col * TILE + TILE / 2;
+  const cy = HOLE.row * TILE + TILE / 2;
+  const P = 4;
+  for (let px = -3; py <= 3; py++) {
+    for (let px = -4; px <= 4; px++) {
+      const d = (px * px) / 16 + (py * py) / 9;
+      if (d > 1) continue;
+      ctx.fillStyle = d > 0.55 ? "#1a0f0a" : "black";
+      ctx.fillRect(cx + px * P - P / 2, cy + py * P - P / 2, P, P);
+    }
+  }
+};
+
+const drawJumpLabel = () => {
+  if (!holeOpen || scene !== "village") return;
+  const bob = Math.round(Math.sin(performance.now() / 250)) * 2;
+  const x = HOLE.col * TILE + TILE / 2;
+  const y = HOLE.row * TILE - 4 + bob;
+  ctx.save();
+  ctx.font = `12px ${PIXEL_FONT}`;
+  ctx.textAlign = "center";
+  ctx.textBaseLine = "middle";
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = "black";
+  ctx.fillStyle = "white";
+  ctx.fillText("JUMP", x, y);
+  ctx.restore();
+}
+
 const draw = () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -451,17 +483,21 @@ const draw = () => {
   }
   rods.forEach((r) => { if (r.scene === scene) r.draw(ctx, 0, 0); });
   drawPromt();
+  drawHole();
 
   ctx.save();
   ctx.translate(heroPos.x, heroPos.y);
   ctx.scale(2, 2);
   shadow.drawImage(ctx, 0, 0);
+
   hero.drawImage(ctx, 0, 0);
   if (pickupTime > 0 && resources.images.rod.isLoaded) {
     const S = 24;
     ctx.drawImage(resources.images.rod.image, 16 -S /2, 18 -S, S, S);
   }
   ctx.restore();
+  drawJumpLabel();
+
 
   ctx.strokeStyle = "lime";
   ctx.strokeRect(heroPos.x + HITBOX.x, heroPos.y + HITBOX.y, HITBOX.w, HITBOX.h);
