@@ -6,7 +6,8 @@ class Resources {
             hero: "/sprites/hero-sheet.png",
             shadow: "/sprites/shadow.png",
             rod: "/sprites/rod.png",
-            campfire: "/sprites/campfire_32x32.png"
+            campfire: "/sprites/campfire_32x32.png",
+            door: "/sprites/door_32x32.png",
         };
 
         this.images = {}

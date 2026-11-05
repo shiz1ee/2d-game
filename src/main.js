@@ -89,6 +89,14 @@ const campfire = new Sprite({
   frame: 0,
 });
 
+const door = new Sprite({
+  resource: resources.images.door,
+  frameSize: new Vector2(32, 32),
+  hFrames: 4,
+  vFrames: 1,
+  frame: 0,
+});
+
 const heroPos = new Vector2(TILE * 10, TILE * 6);
 const input = new Input();
 
@@ -223,6 +231,7 @@ const draw = () => {
 
   drawLevel(ctx)
   campfire.drawImage(ctx, 16 * TILE, 11 * TILE);
+  door.drawImage(ctx, 20* TILE, 5 * TILE);
   rod.draw(ctx, 0, 0);
 
   ctx.save();
