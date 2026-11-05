@@ -109,6 +109,38 @@ const door = new Sprite({
 const heroPos = new Vector2(TILE * 10, TILE * 6);
 const input = new Input();
 
+const STONE = { col: 9, row: 4};
+const WANDS_NEEDED = 4;
+const PIXEL_FONT = '"Press Start 2P", monospace';
+document.fonts.load('16px "Press Start 2P"');
+let nearStone = false;
+let dialog = null;
+let holeOpen = false;
+
+const confirmChoice = () => {
+  const insert = dialog.choice === 0;
+  if (insert && inventory.length < WANDS_NEEDED) return;
+  if (insert) {
+    inventory.length = 0;
+    holeOpen = true;
+  }
+  dialog = null;
+};
+
+document.addEventListener("keydown", (e) => {
+  if (e.repeat) return;
+  if (dialog) {
+    if (e.code === "ArrowLeft" || e.code === "KeyA") dialog.choice = 0;
+    if (e.code === "ArrorRight" || e.code === "KeyD") dialog.choice = 1;
+    if (e.code === "Enter" || e.code === "KeyE") confirmChoice();
+    if (e.code === "Escape") dialog = null;
+    return;
+  }
+  if (e.code === "KeyE" && nearStone && fadeDir === 0 && pickupTime <= 0 && !holeOpen) {
+    dialog = { choice: 0};
+  }
+});
+
 const rod = new Rod(TILE * 20.25, TILE * 6); 
 const rods = [
   rod,
@@ -229,7 +261,7 @@ const update = (delta) => {
   } else if (pickupTime > 0) {
     pickupTime -= delta;
     hero.animations.play("pickUpDown");
-  } else {
+  } else if (dialog) {hero.animations.play(standAnim[facing]);} else {
 
       if (input.direction === DOWN) {
         move(0, SPEED);
@@ -297,6 +329,17 @@ const update = (delta) => {
     }
   }
 
+
+  if (scene === "village") {
+    const cx = heroPos.x + HITBOX.x + HITBOX.w / 2;
+    const cy = heroPos.y + HITBOX.y + HITBOX.h / 2;
+    const sx = STONE.col * TILE + TILE / 2;
+    const sy = STONE.row * TILE + TILE / 2;
+    nearStone = Math.hypot(cx - sx, cy - sy) < TILE * 1.5;
+  } else {
+    nearStone = false;
+  }
+
   events.emit("HERO_BOX", {
     x: heroPos.x + HITBOX.x, y: heroPos.y + HITBOX.y,
     w: HITBOX.w, h: HITBOX.h,
@@ -316,6 +359,66 @@ const update = (delta) => {
   }
 };
 
+const drawPromt = () => {
+  if (!nearStone || dialog || holeOpen) return;
+  const bob = Math.round(Math.sin(performance.now() / 250)) * 2;
+  const x = STONE.col * TILE + TILE / 2;
+  const y = STONE.row * TILE - 8 + bob;
+  ctx.save();
+  ctx.font = `16px ${PIXEL_FONT}`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = "black";
+  ctx.strokeText("E", x, y);
+  ctx.fillStyle = "white";
+  ctx.fillText("E", x, y);
+  ctx.restore();
+};
+
+const drawDialog = () => {
+  if (!dialog) return;
+  const W = Math.min(canvas.width - 40, 720);
+  const H = 110;
+  const x = Math.round((canvas.width - W) / 2);
+  const y = canvas.height - H - 24;
+  const hasEnough = inventory.length >= WANDS_NEEDED;
+
+  ctx.save();
+  ctx.fillStyle = "black";
+  ctx.fillRect(x, y, W, H);
+  ctx.strokeStyle = "white";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(x + 2, y + 2, W - 4, H - 4);
+
+  ctx.textBaseLine = "top";
+  ctx.textAlign = "left";
+  ctx.font = `14px ${PIXEL_FONT}`;
+  ctx.fillStyle = "white";
+  ctx.fillText(`Insert ${WANDS_NEEDED} wands into the stone?`, x + 24, y + 28);
+  ctx.fillStyle = "#aaa";
+  ctx.fillText(`${inventory.length} / ${WANDS_NEEDED}`, x + 24, y + 64);
+
+  const labels = ["Insert", "No"];
+  const BW = 110, BH = 36;
+  labels.forEach((label, i) => {
+    const bx = x + i * (BW + 8);
+    const by = y - BH - 8;
+    const selected = dialog.choice === i;
+    const disabled = i === 0 && !hasEnough;
+    ctx.fillStyle = "black";
+    ctx.fillRect(bx, by, BW, BH);
+    ctx.strokeStyle = selected ? "white" : "#666";
+    ctx.lineWidth = 4;
+    ctx.strokeRect(bx + 2, by + 2, BW - 4, BH -4);
+    ctx.fillStyle = disabled ? "#555" : "white";
+    ctx.font = `12px ${PIXEL_FONT}`;
+    ctx.textAlign = "center";
+    ctx.textBaseLine = "middle";
+    ctx.fillText(label, bx + BW / 2, by + BH / 2);
+  });
+  ctx.restore();
+};
 
 const draw = () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -347,6 +450,7 @@ const draw = () => {
     door.drawImage(ctx, 20* TILE, 5 * TILE);
   }
   rods.forEach((r) => { if (r.scene === scene) r.draw(ctx, 0, 0); });
+  drawPromt();
 
   ctx.save();
   ctx.translate(heroPos.x, heroPos.y);
@@ -376,6 +480,8 @@ const draw = () => {
     if (img.isLoaded) ctx.drawImage(img.image, x + 8,y + 8, SLOT - 16, SLOT - 16);
   })
   ctx.restore();
+
+  drawDialog();
 
   if (fade > 0) {
     ctx.fillStyle = `rgba(0, 0, 0, ${fade})`;
