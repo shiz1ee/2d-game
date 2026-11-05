@@ -29,6 +29,7 @@ canvas.addEventListener("click", (e) => {
 ctx.imageSmoothingEnabled = false;
 const idleFrames = { DOWN: 1, UP: 7, LEFT: 10, RIGHT: 4};
 let facing = DOWN;
+let doorProgress = 0;
 
 let pickupTime = 0;
 const inventory = [];
@@ -190,6 +191,23 @@ const update = (delta) => {
 
   hero.stepEntry(delta, null);
   campfire.frame = Math.floor(performance.now() / 100) % 4;
+
+  
+  {
+    const fx = heroPos.x + HITBOX.x;
+    const fy = heroPos.y + HITBOX.y;
+    const nearDoor =
+      fx < 21 * TILE + 16 && fx + HITBOX.w > 20 * TILE - 16 &&
+      fy < 7 * TILE && fy + HITBOX.h > 6 * TILE;
+
+    const target = nearDoor ? 3 : 0;
+    const step = delta / 120; // one frame per 120 ms
+    if (doorProgress < target) doorProgress = Math.min(target, doorProgress + step);
+    else if (doorProgress > target) doorProgress = Math.max(target, doorProgress - step);
+
+    door.frame = Math.round(doorProgress);
+  }
+  
 
   events.emit("HERO_BOX", {
     x: heroPos.x + HITBOX.x, y: heroPos.y + HITBOX.y,
