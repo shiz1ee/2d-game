@@ -50,6 +50,7 @@ export async function loadLevel(
         });
     }
     removed.forEach(([c, r]) => walls.delete(`${c * TILE},${r * TILE}`));
+        console.log("walls count:", walls.size, "map:", jsonUrl);
 
 }
 

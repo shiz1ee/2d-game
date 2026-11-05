@@ -36,6 +36,7 @@ let fadeDir = 0;
 let scene = "village"
 let switching = false;
 const FADE_MS = 400;
+let lastNow = performance.now();
 let onBlack = null;
 
 let pickupTime = 0;
@@ -178,34 +179,30 @@ const changeScene = async (name) => {
   } else {
     await loadLevel();
     WORLD_W = 30 * TILE;
-    WORLD_H + 20 * TILE;
+    WORLD_H = 20 * TILE;
     camera.worldW = null;
-    camera.WORLDH = null;
+    camera.worldH = null;
     heroPos.x = 624;
     heroPos.y = 156;
     facing = DOWN;
     doorProgress = 3;
   }
+  events.emit("HERO_POSITION", new Vector2(
+    heroPos.x + HITBOX.x + HITBOX.w / 2,
+    heroPos.y + HITBOX.y + HITBOX.h / 2
+  ));
   scene = name;
   lastHeroX = undefined;
 };
 
 const update = (delta) => {
 
-  if (fadeDir !== 0) {
-    fade += (fadeDir * delta) / FADE_MS;
-    if (fadeDir === 1 && fade >= 1) {
-      fade = 1;
-      fadeDir = -1;
-      if (onBlack) onBlack();
-    } else if (fadeDir === -1 && fade <= 0) {
-      fade = 0;
-      fadeDir = 0;
-    }
-  } 
+  const now = performance.now();
+  const realDt = Math.min(now - lastNow, 250);
+  lastNow = now;
 
   if (fadeDir !== 0) {
-    fade += (fadeDir + delta) / FADE_MS;
+    fade += (fadeDir * realDt) / FADE_MS;
     if (fadeDir === 1 && fade >= 1) {
       fade = 1;
       if (!switching) {
@@ -213,12 +210,16 @@ const update = (delta) => {
         Promise.resolve(onBlack && onBlack()).then(() => {
           switching = false;
           fadeDir = -1;
-        })
+        });
       }
     } else if (fadeDir === -1 && fade <= 0) {
       fade = 0;
       fadeDir = 0;
     }
+  }
+
+  if (fadeDir !== 0) {
+    hero.animations.play(standAnim[facing]);
   } else if (pickupTime > 0) {
     pickupTime -= delta;
     hero.animations.play("pickUpDown");
@@ -333,7 +334,6 @@ const draw = () => {
   // everything in the world goes inside the camera block
   ctx.save();
   ctx.translate(Math.round(camera.position.x), Math.round(camera.position.y));
-
   drawLevel(ctx)
 
   if (scene === "village") {

@@ -17,10 +17,10 @@ export class Camera extends GameObject {
             let y = -targetPosition.y + (this.canvasHeight / 2);
 
             if (this.worldW !== null && this.worldW <= this.canvasWidth) {
-                x = (this.canvasWidth = this.worldW) / 2;
+                x = (this.canvasWidth - this.worldW) / 2;
             }
             if (this.worldH !== null && this.worldH <= this.canvasHeight) {
-                y = (this.canvasHeight = this.worldH) / 2;
+                y = (this.canvasHeight - this.worldH) / 2;
             }
             
             this.position = new Vector2(
