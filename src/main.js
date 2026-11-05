@@ -110,6 +110,12 @@ const heroPos = new Vector2(TILE * 10, TILE * 6);
 const input = new Input();
 
 const rod = new Rod(TILE * 20.25, TILE * 6); 
+const rods = [
+  rod,
+  new Rod( 8 * TILE + 8, 7 * TILE + 8, "village"),
+  new Rod( 21 * TILE + 8, 11 * TILE + 8, "village"),
+  new Rod( 10 * TILE + 8, 6 * TILE + 8, "house"),
+]
 
 
 const SPEED = 1;
@@ -152,7 +158,7 @@ const mainScene = new GameObject({});
 const camera = new Camera(canvas.width, canvas.height);
 mainScene.addChild(camera);
 
-mainScene.addChild(rod);
+rods.forEach((r) => mainScene.addChild(r));
 
 const resize = () => {
   canvas.width = window.innerWidth;
@@ -290,11 +296,11 @@ const update = (delta) => {
       onBlack = () => changeScene("village");
     }
   }
-  
 
   events.emit("HERO_BOX", {
     x: heroPos.x + HITBOX.x, y: heroPos.y + HITBOX.y,
     w: HITBOX.w, h: HITBOX.h,
+    scene,
   });
 
   mainScene.stepEntry(delta, mainScene);
@@ -339,8 +345,8 @@ const draw = () => {
   if (scene === "village") {
     campfire.drawImage(ctx, 16 * TILE, 11 * TILE);
     door.drawImage(ctx, 20* TILE, 5 * TILE);
-    rod.draw(ctx, 0, 0);
   }
+  rods.forEach((r) => { if (r.scene === scene) r.draw(ctx, 0, 0); });
 
   ctx.save();
   ctx.translate(heroPos.x, heroPos.y);

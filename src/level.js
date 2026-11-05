@@ -77,7 +77,7 @@ export function drawLevel(ctx) {
                 ctx.translate(dx + TILE, dy);
                 ctx.scale(-1, 1);
                 ctx.drawImage(tilesetImg, sx, sy, srcTILE, srcTILE, 0, 0, TILE, TILE);
-                SVGTextContentElement.restore();
+                ctx.restore();
             } else {
                 ctx.drawImage(tilesetImg, sx, sy, srcTILE, srcTILE, dx, dy, TILE, TILE);
             }

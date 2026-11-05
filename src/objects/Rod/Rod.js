@@ -5,13 +5,15 @@ import { resources } from "../../Resource.js";
 import { events } from "../../Events.js";
 
 export class Rod extends GameObject {
-    constructor(x, y) {
+    constructor(x, y, scene = "village") {
         super({ position: new Vector2(x, y) });
+        this.scene = scene;
 
         this.sprite = new Sprite({ resource: resources.images.rod });
         this.addChild(this.sprite);
 
         events.on("HERO_BOX", this, (box) => {
+            if (box.scene !== this.scene) return;
             const w = this.sprite.frameSize.x * this.sprite.scale;
             const h = this.sprite.frameSize.y * this.sprite.scale;
             const overlaps =
