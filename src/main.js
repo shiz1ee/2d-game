@@ -117,6 +117,43 @@ document.fonts.load('16px "Press Start 2P"');
 let nearStone = false;
 let dialog = null;
 let holeOpen = false;
+let nearHole = false;
+let jump = null;
+const ARC_MS = 600;
+const FALL_MS = 350;
+const GROW_MS = 3500;
+const END_DELAY_MS = 2000;
+const TYPE_MS = 130;
+const DOT_MS = 500;
+
+const startJump = () => {
+  input.heldDirections.length = 0;
+  jump = {
+    t: 0, phase: "arc", lift: 0, shrink: 0,
+    from: { x: heroPos.x, y: heroPos.y},
+    to: {
+      x: HOLE.col * TILE + TILE / 2 - (HITBOX.x + HITBOX.w / 2),
+      y: HOLE.row * TILE + TILE / 2 - (HITBOX.y + HITBOX.h / 2),
+    },
+  };
+};
+
+const updateJump = (dt) => {
+  jump.t += dt;
+  if (jump.phase === "arc") {
+    const p = Math.min(1, jump.t / ARC_MS);
+    heroPos.x = jump.from.x + (jump.to.x - jump.from.x) * p;
+    heroPos.y = jump.from.y + (jump.to.y - jump.from.y) * p;
+    jump.lift = Math.sin(Math.PI * p) * 48;
+    if (p >= 1) { jump.phase = "fall"; jump.t = 0;}
+  } else if (jump.phase === "fall") {
+    jump.lift = 0;
+    jump.shrink = Math.min(1, jump.t / FALL_MS);
+    if (jump.shrink >= 1 ) {jump.phase = "grow"; jump.t = 0;}
+    } else if (jump.phase === "grow") {
+      if (jump.t >= GROW_MS) { jump.phase = "done"; jump.t = 0; }
+    }
+};
 
 const confirmChoice = () => {
   const insert = dialog.choice === 0;
@@ -139,6 +176,10 @@ document.addEventListener("keydown", (e) => {
   }
   if (e.code === "KeyE" && nearStone && fadeDir === 0 && pickupTime <= 0 && !holeOpen) {
     dialog = { choice: 0};
+  }
+  if (e.code === "Space" && nearHole && !jump && fadeDir === 0) {
+    e.preventDefault();
+    startJump();
   }
 });
 
@@ -257,7 +298,10 @@ const update = (delta) => {
     }
   }
 
-  if (fadeDir !== 0) {
+  if (jump) {
+    updateJump(realDt);
+    hero.animations.play(standAnim[facing]);
+  } else if (fadeDir !== 0) {
     hero.animations.play(standAnim[facing]);
   } else if (pickupTime > 0) {
     pickupTime -= delta;
@@ -337,8 +381,12 @@ const update = (delta) => {
     const sx = STONE.col * TILE + TILE / 2;
     const sy = STONE.row * TILE + TILE / 2;
     nearStone = Math.hypot(cx - sx, cy - sy) < TILE * 1.5;
+    const hx = HOLE.col * TILE + TILE / 2;
+    const hy = HOLE.row * TILE +TILE / 2;
+    nearHole = holeOpen && Math.hypot(cx - hx, cy - hy) < TILE * 2;
   } else {
     nearStone = false;
+    nearHole = false;
   }
 
   events.emit("HERO_BOX", {
@@ -437,7 +485,7 @@ const drawHole = () => {
 };
 
 const drawJumpLabel = () => {
-  if (!holeOpen || scene !== "village") return;
+  if (!holeOpen || scene !== "village" || jump) return;
   const bob = Math.round(Math.sin(performance.now() / 250)) * 2;
   const x = HOLE.col * TILE + TILE / 2;
   const y = HOLE.row * TILE - 4 + bob;
@@ -451,6 +499,58 @@ const drawJumpLabel = () => {
   ctx.fillText("JUMP", x, y);
   ctx.restore();
 }
+
+const drawJumpCircle = () => {
+  if (!jump || (jump.phase !== "grow" && jump.phase !== "done")) return;
+  const cx = HOLE.col * TILE + TILE / 2 + Math.round(camera.position.x);
+  const cy = HOLE.row * TILE + TILE / 2 + Math.round(camera.position.y);
+  const far = Math.hypot(
+    Math.max(cx, canvas.width - cx),
+    Math.max(cy, canvas.height - cy)
+  );
+  const p = jump.phase === "done" ? 1 : jump.t / GROW_MS;
+  const r = 18 + (far - 18) * p * p;
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = "black";
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI *2);
+  ctx.fill();
+  ctx.restore();
+};
+
+const drawEnding = () => {
+  if (!jump || jump.phase !== "done") return;
+  const t = jump.t - END_DELAY_MS;
+  if (t < 0) return;
+
+  const full = "TO BE CONTINUED";
+  const typed = Math.min(full.length, Math.floor(t / TYPE_MS) + 1);
+  let text = full.slice(0, typed);
+  if (typed === full.length) {
+    const tDots = t - (full.length -1) * TYPE_MS;
+    text += ".".repeat((Math.floor(tDots / DOT_MS) % 3) + 1);
+  }
+
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.font = '56px "Courier New", Courier, monospace';
+  ctx.letterSpacing = "4px";
+  ctx.textAlign = "left";
+  ctx.textBaseLine = "middle";
+  
+  const x = (canvas.width - ctx.measureText(full + "...").width) / 2;
+  const y = canvas.height /2;
+  ctx.fillStyle = "#ff2a2a";
+  ctx.shadowColor = "#ff0000";
+  ctx.shadowBlur = 24;
+  ctx.fillText(text, x, y);
+  ctx.shadowBlur = 34;
+  ctx.fillText(text, x, y);
+  ctx.shadowBlur = 8;
+  ctx.fillText(text, x, y);
+  ctx.restore();
+};
 
 const draw = () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -489,7 +589,14 @@ const draw = () => {
   ctx.translate(heroPos.x, heroPos.y);
   ctx.scale(2, 2);
   shadow.drawImage(ctx, 0, 0);
-
+  if (jump) {
+    const s = 1 - jump.shrink;
+    const fx = (HITBOX.x + HITBOX.w / 2) / 2;
+    const fy = (HITBOX.y + HITBOX.h / 2) / 2;
+    ctx.translate(fx, fy - jump.lift / 2);
+    ctx.scale(s, s);
+    ctx.translate(-fx, -fy);
+  }
   hero.drawImage(ctx, 0, 0);
   if (pickupTime > 0 && resources.images.rod.isLoaded) {
     const S = 24;
@@ -499,8 +606,7 @@ const draw = () => {
   drawJumpLabel();
 
 
-  ctx.strokeStyle = "lime";
-  ctx.strokeRect(heroPos.x + HITBOX.x, heroPos.y + HITBOX.y, HITBOX.w, HITBOX.h);
+  
   ctx.restore();
   ctx.save();
   
@@ -517,6 +623,8 @@ const draw = () => {
   })
   ctx.restore();
 
+  drawJumpCircle();
+  drawEnding();
   drawDialog();
 
   if (fade > 0) {
