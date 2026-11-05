@@ -426,7 +426,7 @@ const drawHole = () => {
   const cx = HOLE.col * TILE + TILE / 2;
   const cy = HOLE.row * TILE + TILE / 2;
   const P = 4;
-  for (let px = -3; py <= 3; py++) {
+  for (let py = -3; py <= 3; py++) {
     for (let px = -4; px <= 4; px++) {
       const d = (px * px) / 16 + (py * py) / 9;
       if (d > 1) continue;
