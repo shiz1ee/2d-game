@@ -175,7 +175,7 @@ document.addEventListener("keydown", (e) => {
     return;
   }
   if (e.code === "KeyE" && nearStone && fadeDir === 0 && pickupTime <= 0 && !holeOpen) {
-    dialog = { choice: 0};
+    dialog = { choice: 0, t: 0 };
   }
   if (e.code === "Space" && nearHole && !jump && fadeDir === 0) {
     e.preventDefault();
@@ -280,6 +280,7 @@ const update = (delta) => {
   const now = performance.now();
   const realDt = Math.min(now - lastNow, 250);
   lastNow = now;
+  if (dialog) dialog.t += realDt;
 
   if (fadeDir !== 0) {
     fade += (fadeDir * realDt) / FADE_MS;
@@ -446,7 +447,9 @@ const drawDialog = () => {
   ctx.textAlign = "left";
   ctx.font = `14px ${PIXEL_FONT}`;
   ctx.fillStyle = "white";
-  ctx.fillText(`Insert ${WANDS_NEEDED} wands into the stone?`, x + 24, y + 28);
+  const full = `Insert ${WANDS_NEEDED} wands into the stone?`;
+  const shown = full.slice(0, Math.floor(dialog.t / 40) + 1);
+  ctx.fillText(shown, x + 24, y + 28);
   ctx.fillStyle = "#aaa";
   ctx.fillText(`${inventory.length} / ${WANDS_NEEDED}`, x + 24, y + 64);
 
