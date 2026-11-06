@@ -35,7 +35,6 @@ export async function loadLevel(
         tilesetImg.src = imgUrl;
     });
     cols = Math.floor(tilesetImg.width / srcTILE);
-    console.log("tileset cols: ", cols);
 
     walls.clear();
     for (const layer of mapData.layers) {
@@ -50,7 +49,6 @@ export async function loadLevel(
         });
     }
     removed.forEach(([c, r]) => walls.delete(`${c * TILE},${r * TILE}`));
-        console.log("walls count:", walls.size, "map:", jsonUrl);
 
 }
 

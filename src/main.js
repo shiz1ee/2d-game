@@ -20,7 +20,6 @@ import { beep } from './sound.js';
 
 const canvas = document.querySelector("#game-canvas");
 const ctx = canvas.getContext("2d");
-// for removing the extra collision boxes
 canvas.addEventListener("click", (e) => {
   const r = canvas.getBoundingClientRect();
   const col = Math.floor((((e.clientX - r.left) * (canvas.width / r.width)) - camera.position.x) / TILE);
