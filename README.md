@@ -3,6 +3,8 @@ A small top-down 2D game I'm building in plain JavaScript and HTML canvas, no ga
 
 The idea: you wake up in a little island, collect 4 magic wands, and shove them into a mysterious stone. Something opens up, YOu jump in. Then the screen goes black and welll to be continued.
 
+## Click here for [DEMO](https://2d-game-lake.vercel.app)
+
 ![island](screenshots/ss3.png)
 
 # How to run it 
