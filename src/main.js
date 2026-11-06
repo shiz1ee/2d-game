@@ -175,6 +175,7 @@ const confirmChoice = () => {
 
 document.addEventListener("keydown", (e) => {
   if (e.repeat) return;
+  if (e.code === "KeyR" && jump && jump.phase === "done" && jump.t >= END_DELAY_MS) location.reload();
   if (dialog) {
     if (e.code === "ArrowLeft" || e.code === "KeyA") dialog.choice = 0;
     if (e.code === "ArrowRight" || e.code === "KeyD") dialog.choice = 1;
@@ -563,6 +564,19 @@ const drawEnding = () => {
   ctx.fillText(text, x, y);
   ctx.shadowBlur = 8;
   ctx.fillText(text, x, y);
+  if (typed === full.length) {
+    const textW = ctx.measureText(full + "...").width;
+    ctx.font = '20px "Courier New", Courier, monospace';
+    const label = "PLAY AGAIN (R)";
+    const PW = ctx.measureText(label).width + 32;
+    const PH = 44;
+    const px = x + textW - PW;
+    const py = y + 40;
+    ctx.strokeStyle = "#ff2a2a";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(px, py, PW, PH);
+    ctx.fillText(label, px + 16, py + 29);
+  }
   ctx.restore();
 };
 
