@@ -14,6 +14,8 @@ import { GameObject } from './GameObject.js';
 import { Rod } from './objects/Rod/Rod.js';
 import { events } from './Events.js';
 import { Inventory } from './objects/Inventory/Inventory.js';
+import { beep } from './sound.js';
+
 
 
 const canvas = document.querySelector("#game-canvas");
@@ -44,6 +46,8 @@ const inventory = [];
 events.on("HERO_PICKS_UP_ITEM", null, (data) => {
   pickupTime = 500; // ms
   inventory.push(data.image);
+  beep(880, 90);
+  setTimeout(() => beep(1320, 120), 90);
 });
 
 
@@ -127,6 +131,8 @@ const TYPE_MS = 130;
 const DOT_MS = 500;
 
 const startJump = () => {
+  beep(520, 150);
+  setTimeout(()=> beep(260, 400, "triangle"), 600);
   input.heldDirections.length = 0;
   jump = {
     t: 0, phase: "arc", lift: 0, shrink: 0,
@@ -161,6 +167,8 @@ const confirmChoice = () => {
   if (insert) {
     inventory.length = 0;
     holeOpen = true;
+    beep(220, 200, "sawtooth");
+    setTimeout(() => beep(110, 300, "sawtooth"), 150);
   }
   dialog = null;
 };
@@ -176,6 +184,7 @@ document.addEventListener("keydown", (e) => {
   }
   if (e.code === "KeyE" && nearStone && fadeDir === 0 && pickupTime <= 0 && !holeOpen) {
     dialog = { choice: 0, t: 0 };
+    beep(660, 60);
   }
   if (e.code === "Space" && nearHole && !jump && fadeDir === 0) {
     e.preventDefault();
