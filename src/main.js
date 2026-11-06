@@ -169,7 +169,7 @@ document.addEventListener("keydown", (e) => {
   if (e.repeat) return;
   if (dialog) {
     if (e.code === "ArrowLeft" || e.code === "KeyA") dialog.choice = 0;
-    if (e.code === "ArrorRight" || e.code === "KeyD") dialog.choice = 1;
+    if (e.code === "ArrowRight" || e.code === "KeyD") dialog.choice = 1;
     if (e.code === "Enter" || e.code === "KeyE") confirmChoice();
     if (e.code === "Escape") dialog = null;
     return;
@@ -434,13 +434,15 @@ const drawDialog = () => {
   const hasEnough = inventory.length >= WANDS_NEEDED;
 
   ctx.save();
-  ctx.fillStyle = "black";
+  ctx.fillStyle = "#0f1b2d";
   ctx.fillRect(x, y, W, H);
   ctx.strokeStyle = "white";
   ctx.lineWidth = 4;
   ctx.strokeRect(x + 2, y + 2, W - 4, H - 4);
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x + 7, y + 7, W - 14, H - 14);
 
-  ctx.textBaseLine = "top";
+  ctx.textBaseline = "top";
   ctx.textAlign = "left";
   ctx.font = `14px ${PIXEL_FONT}`;
   ctx.fillStyle = "white";
@@ -463,7 +465,7 @@ const drawDialog = () => {
     ctx.fillStyle = disabled ? "#555" : "white";
     ctx.font = `12px ${PIXEL_FONT}`;
     ctx.textAlign = "center";
-    ctx.textBaseLine = "middle";
+    ctx.textBaseline = "middle";
     ctx.fillText(label, bx + BW / 2, by + BH / 2);
   });
   ctx.restore();
@@ -492,7 +494,7 @@ const drawJumpLabel = () => {
   ctx.save();
   ctx.font = `12px ${PIXEL_FONT}`;
   ctx.textAlign = "center";
-  ctx.textBaseLine = "middle";
+  ctx.textBaseline = "middle";
   ctx.lineWidth = 4;
   ctx.strokeStyle = "black";
   ctx.fillStyle = "white";
@@ -537,7 +539,7 @@ const drawEnding = () => {
   ctx.font = '56px "Courier New", Courier, monospace';
   ctx.letterSpacing = "4px";
   ctx.textAlign = "left";
-  ctx.textBaseLine = "middle";
+  ctx.textBaseline = "middle";
   
   const x = (canvas.width - ctx.measureText(full + "...").width) / 2;
   const y = canvas.height /2;
